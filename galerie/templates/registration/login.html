@@ -1,0 +1,24 @@
+{% extends 'galerie/base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <h2 style="text-align: center; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Přihlášení</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Uživatelské jméno:</label>
+            {{ form.username }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Heslo:</label>
+            {{ form.password }}
+        </div>
+        {% if form.errors %}
+        <div style="color: red; margin-bottom: 15px;">
+            <p>Neplatné přihlašovací údaje. Zkuste to znovu.</p>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn-primary" style="width: 100%;">Přihlásit se</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'galerie/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .geocoder-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .geocoder-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        #uploadMap {
+            height: 300px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            z-index: 1;
+        }
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block title %}Nahrát fotku | Skotsko{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 20px;">Nahrát novou vzpomínku</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        
+        <h4 style="margin-bottom: 10px;">Nemá fotka GPS? Vyberte místo ručně</h4>
+        <p class="help-text">Pokud má fotka GPS data z mobilu, ignorujte tuto mapu. V opačném případě vyhledejte lokaci a kliknutím umístěte špendlík.</p>
+        
+        <div class="geocoder-container">
+            <input type="text" id="searchInput" placeholder="Hledat místo (např. Glencoe, Scotland)">
+            <button type="button" id="searchBtn" class="btn-primary" style="width: auto;">Hledat na mapě</button>
+        </div>
+        
+        <div id="uploadMap"></div>
+        
+        <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%; font-size: 1.1rem; padding: 12px;">Nahrát a uložit fotku</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. Inicializace mapy (střed Skotska)
+        const uploadMap = L.map('uploadMap').setView([56.4907, -4.2026], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(uploadMap);
+
+        let currentMarker = null;
+
+        // Najdeme skrytá pole, která vygeneroval Django
+        const latInput = document.querySelector('input[name="latitude"]');
+        const lonInput = document.querySelector('input[name="longitude"]');
+
+        // 2. Funkce pro umístění špendlíku
+        function setMarker(lat, lng) {
+            if (currentMarker) uploadMap.removeLayer(currentMarker);
+            currentMarker = L.marker([lat, lng]).addTo(uploadMap);
+            // Zapíšeme souřadnice do skrytých formulářových polí!
+            latInput.value = lat;
+            lonInput.value = lng;
+        }
+
+        // 3. Kliknutí do mapy
+        uploadMap.on('click', function(e) {
+            setMarker(e.latlng.lat, e.latlng.lng);
+        });
+
+        // 4. Vyhledávání přes Nominatim API (OpenStreetMap)
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            let query = document.getElementById('searchInput').value;
+            if(!query) return;
+            
+            // Přidáme "Scotland" pro přesnější výsledky, pokud to uživatel nenapsal
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data && data.length > 0) {
+                        let lat = data[0].lat;
+                        let lon = data[0].lon;
+                        uploadMap.setView([lat, lon], 13); // Přiblížíme na místo
+                        setMarker(lat, lon); // Zapíchneme špendlík
+                    } else {
+                        alert("Místo nebylo nalezeno. Zkuste to anglicky nebo obecněji.");
+                    }
+                })
+                .catch(err => console.error("Chyba při hledání:", err));
+        });
+
+        // Trigger vyhledávání i po stisknutí Enteru v políčku
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Zabrání odeslání celého formuláře!
+                document.getElementById('searchBtn').click();
+            }
+        });
+    </script>
+{% endblock %}
