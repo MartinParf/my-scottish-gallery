@@ -1,6 +1,6 @@
 {% extends 'galerie/base.html' %}
 
-{% block title %}O nás | Skotsko Galerie{% endblock %}
+{% block title %}About Us | Scottish Gallery{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -31,10 +31,10 @@
     }
 
     .about-text h1 {
-    font-family: 'Playfair Display', serif;
-    color: var(--text-main); /* Automaticky tmavá ve světlém, světlá v tmavém režimu */
-    margin-bottom: 20px;
-    font-size: 2.2rem;
+        font-family: 'Playfair Display', serif;
+        color: var(--text-main); /* Automatically dark in light mode, light in dark mode */
+        margin-bottom: 20px;
+        font-size: 2.2rem;
     }
 
     .about-text p {
@@ -43,7 +43,7 @@
         margin-bottom: 15px;
     }
 
-    /* Na mobilu se to poskládá pod sebe */
+    /* On mobile, the layout stacks vertically */
     @media (max-width: 768px) {
         .about-container {
             grid-template-columns: 1fr;
@@ -60,19 +60,19 @@
     </div>
 
     <div class="about-text">
-        <h1>Náš skotský příběh</h1>
+        <h1>Our Scottish Story</h1>
         <p>
-            Vítejte v naší galerii. Jsme Martin, Martina a naše kočičí společnice Olivia. 
-            Do Skotska jsme přijeli za dobrodružstvím, drsnou přírodou a prací v high-tech průmyslu.
+            Welcome to our gallery. We are Martin, Martina and our feline companion Olivia.
+            We came to Scotland for adventure, rugged landscapes and work in the high‑tech industry.
         </p>
         <p>
-            Tato mapa je sbírkou našich vzpomínek. Od deštivých víkendů na Isle of Skye, 
-            přes toulky historickým Edinburghem, až po obyčejné momentky s pintou dobrého piva. 
-            Skotsko nás naučilo, že i za nejhoršího počasí se dá objevit neuvěřitelná krása.
+            This map is a collection of our memories. From rainy weekends on the Isle of Skye,
+            to wandering through historic Edinburgh, all the way to everyday moments with a pint of good beer.
+            Scotland has taught us that even in the worst weather you can discover incredible beauty.
         </p>
         <p>
-            <strong>Kam dál?</strong> I když se naše kroky možná brzy přesunou zpět do Beskyd, 
-            Highlands v našich srdcích zůstanou napořád.
+            <strong>What comes next?</strong> Even if our footsteps soon lead us back to the Beskydy mountains,
+            the Highlands will stay in our hearts forever.
         </p>
     </div>
 </div>

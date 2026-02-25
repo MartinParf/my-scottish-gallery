@@ -15,7 +15,7 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 
-load_dotenv()  # Načte proměnné z .env souboru (pokud existuje)
+load_dotenv()  # Load variables from .env file (if present)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'tady-je-fallback-klic-pro-vyvoj')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'development-fallback-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # Pro Fly.io a testování zatím povolíme vše
+ALLOWED_HOSTS = ['*']  # For Fly.io and testing we temporarily allow all hosts
 
 CSRF_TRUSTED_ORIGINS = [
     'https://my-scottish-gallery.fly.dev',
@@ -85,23 +85,23 @@ WSGI_APPLICATION = 'skotsko_mapa.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# Nejdříve se podíváme, jestli nám Fly.io dalo tajnou URL k produkční databázi
+# First, check whether Fly.io provided a secret URL for the production database
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # 1. BĚŽÍME NA INTERNETU (Produkce Fly.io)
+    # 1. RUNNING IN THE CLOUD (Fly.io production)
     DATABASES = {
         'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
 else:
-    # 2. BĚŽÍME U VÁS NA POČÍTAČI (Lokální vývoj)
-    # Tady prosím vyplňte údaje, které jste tam měl dříve!
+    # 2. RUNNING LOCALLY ON YOUR MACHINE (local development)
+    # Please fill in the values you previously used here.
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'mapagalerie', # Např. mapa_db nebo my_project
-            'USER': 'postgres',                    # Váš PostgreSQL uživatel (často postgres)
-            'PASSWORD': '12345',      # Vaše heslo do databáze
+            'NAME': 'mapagalerie',  # e.g. mapa_db or my_project
+            'USER': 'postgres',     # Your PostgreSQL user (often postgres)
+            'PASSWORD': '12345',    # Your database password
             'HOST': 'localhost',
             'PORT': '5432',
         }
@@ -144,22 +144,22 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Složka, kam se složí statické soubory při produkci
+# Directory where static files are collected in production
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Nový formát STORAGES pro Django 5.1+ a 6.0
+# New STORAGES format for Django 5.1+ and 6.0
 STORAGES = {
     "default": {
-        # Výchozí ukládání fotek (lokálně) - pro případ, že .env nemáme
+        # Default file storage for photos (local) – used when .env is not configured
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        # Zpracování CSS/JS přes WhiteNoise
+        # Serve and compress CSS/JS through WhiteNoise
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
-# Pokud máme načtený Cloudinary klíč z .env, přepíšeme chování pro fotky
+# If a Cloudinary key is available from .env, override default storage for photos
 if os.environ.get('CLOUDINARY_URL'):
     STORAGES["default"]["BACKEND"] = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
@@ -169,6 +169,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 
-# Přesměrování po přihlášení a odhlášení
+# Redirects after login and logout
 LOGIN_REDIRECT_URL = 'galerie:photo_list'
 LOGOUT_REDIRECT_URL = 'galerie:photo_list'

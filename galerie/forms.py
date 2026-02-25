@@ -6,9 +6,9 @@ class PhotoUploadForm(forms.ModelForm):
         model = Photo
         fields = ['title', 'image', 'description', 'is_public', 'category', 'latitude', 'longitude']
         
-        # Přidáme CSS třídy pro náš moderní vzhled, aby formulář nevypadal jako z roku 1995
+        # Add CSS classes for a modern look so the form does not feel outdated
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Název fotky'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Photo title'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'latitude': forms.HiddenInput(),

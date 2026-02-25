@@ -183,17 +183,17 @@
 
 {% block content %}
     <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="font-family: 'Playfair Display', serif; margin-bottom: 5px;">Mapa vzpomínek</h1>
-        <p style="color: #666;">Klikněte na shluky pro přiblížení. Klikněte na fotku v bublině pro zvětšení.</p>
+        <h1 style="font-family: 'Playfair Display', serif; margin-bottom: 5px;">Map of Memories</h1>
+        <p style="color: #666;">Click on clusters to zoom in. Click on a photo in the popup to enlarge it.</p>
     </div>
 
     <div class="map-filters" id="filterContainer">
-        <button class="filter-btn active" data-filter="all">🌍 Vše</button>
-        <button class="filter-btn" data-filter="nature">🌲 Příroda</button>
-        <button class="filter-btn" data-filter="architecture">🏰 Architektura</button>
-        <button class="filter-btn" data-filter="animals">🐾 Zvířata</button>
-        <button class="filter-btn" data-filter="people">❤️ Lidé</button>
-        <button class="filter-btn" data-filter="fun">🍻 Zábava</button>
+        <button class="filter-btn active" data-filter="all">🌍 All</button>
+        <button class="filter-btn" data-filter="nature">🌲 Nature</button>
+        <button class="filter-btn" data-filter="architecture">🏰 Architecture</button>
+        <button class="filter-btn" data-filter="animals">🐾 Animals</button>
+        <button class="filter-btn" data-filter="people">❤️ People</button>
+        <button class="filter-btn" data-filter="fun">🍻 Fun</button>
     </div>
 
     <div id="map"></div>
@@ -281,7 +281,7 @@
                     // Do openModal posíláme INDEX, ne URL
                     let popupContent = `<h4>${photo.title}</h4>`;
                     if (photo.url) {
-                        popupContent += `<img src="${photo.url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Klikni pro zvětšení">`;
+                        popupContent += `<img src="${photo.url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Click to enlarge">`;
                     }
                     // Původní kód:
                     //if (photo.desc) popupContent += `<p style="font-size: 0.9em; color: #555;">${photo.desc}</p>`;
