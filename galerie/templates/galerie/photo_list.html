@@ -280,13 +280,13 @@
                     
                     // Do openModal posíláme INDEX, ne URL
                     let popupContent = `<h4>${photo.title}</h4>`;
-                    if (photo.url) {
-                        popupContent += `<img src="${photo.url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Click to enlarge">`;
-                    }
-                    // Původní kód:
-                    //if (photo.desc) popupContent += `<p style="font-size: 0.9em; color: #555;">${photo.desc}</p>`;
                     
-                    // Nový kód (JavaScript zkrátí text jen pro bublinu):
+                    // ZMĚNA ZDE: Ptáme se na photo.thumb_url a do src dáváme photo.thumb_url
+                    if (photo.thumb_url) {
+                        popupContent += `<img src="${photo.thumb_url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Click to enlarge" style="width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer;">`;
+                    }
+                                        
+                    // (JavaScript zkrátí text jen pro bublinu):
                     if (photo.desc) {
                         // Pokud je text delší než 50 znaků, uřízneme ho a přidáme tečky. Jinak ho necháme být.
                         let shortDesc = photo.desc.length > 50 ? photo.desc.substring(0, 50) + "..." : photo.desc;
@@ -321,7 +321,9 @@
 
         function updateModalContent() {
             const photo = currentFilteredPhotos[currentPhotoIndex];
-            modalImg.src = photo.url;
+            
+            // ZMĚNA ZDE: modal používá photo.full_url
+            modalImg.src = photo.full_url;
             
             let captionHtml = `<h3>${photo.title}</h3>`;
             if (photo.desc) captionHtml += `<p>${photo.desc}</p>`;

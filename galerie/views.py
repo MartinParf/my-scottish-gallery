@@ -17,11 +17,25 @@ def photo_list(request):
     for photo in photos:
         # Add only photos that we managed to geolocate
         if photo.latitude and photo.longitude:
+            
+            # Nastavení URL adres pro mapu a detail
+            thumb_url = ''
+            full_url = ''
+            
+            if photo.image:
+                full_url = photo.image.url
+                # Pokud adresa obsahuje /upload/ (Cloudinary), vygenerujeme miniaturu
+                if '/upload/' in full_url:
+                    thumb_url = full_url.replace('/upload/', '/upload/w_300,h_300,c_fill,q_auto,f_auto/')
+                else:
+                    thumb_url = full_url
+
             map_data.append({
                 'title': photo.title,
                 'lat': photo.latitude,
                 'lon': photo.longitude,
-                'url': photo.image.url if photo.image else '',
+                'thumb_url': thumb_url,  # ZDE POSÍLÁME MINIATURU
+                'full_url': full_url,    # ZDE POSÍLÁME ORIGINÁL
                 'desc': photo.description if photo.description else '',
                 'category': photo.category
             })
