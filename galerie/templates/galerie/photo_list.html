@@ -281,7 +281,7 @@
                     // Do openModal posíláme INDEX, ne URL
                     let popupContent = `<h4>${photo.title}</h4>`;
                     if (photo.url) {
-                        popupContent += `<img src="${photo.thumb_url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Click to enlarge">`;
+                        popupContent += `<img src="${photo.url}" alt="${photo.title}" onclick="openModal(${currentIndex})" title="Click to enlarge">`;
                     }
                     // Původní kód:
                     //if (photo.desc) popupContent += `<p style="font-size: 0.9em; color: #555;">${photo.desc}</p>`;
@@ -321,7 +321,7 @@
 
         function updateModalContent() {
             const photo = currentFilteredPhotos[currentPhotoIndex];
-            modalImg.src = photo.full_url;
+            modalImg.src = photo.url;
             
             let captionHtml = `<h3>${photo.title}</h3>`;
             if (photo.desc) captionHtml += `<p>${photo.desc}</p>`;
