@@ -113,18 +113,25 @@ ul {
   color: var(--accent);
 }
 
-.btn-primary {
+/* Sjednocený vzhled pro všechna hlavní a formulářová tlačítka (Světlý režim) */
+.btn-primary,
+.form-container button[type="submit"] {
   background-color: var(--primary);
   color: var(--white);
-  padding: 8px 20px;
+  padding: 10px 20px;
   border-radius: 20px;
   font-weight: 600;
   border: none;
   cursor: pointer;
+  transition: 0.3s;
+  width: 100%; /* Ve formuláři vypadá lépe na celou šířku */
 }
 
-.btn-primary:hover {
+/* Sjednocený hover efekt - vynucení bílého textu */
+.btn-primary:hover,
+.form-container button[type="submit"]:hover {
   background-color: var(--accent);
+  color: #ffffff !important; /* Zabrání zmizení textu, zůstane ostře bílý */
 }
 
 .main-content {
@@ -248,4 +255,26 @@ ul {
   .hamburger {
     display: block;
   }
+  
+}
+
+/* === OPRAVA TLAČÍTEK PRO TMAVÝ REŽIM === */
+/* Týká se hlavních tlačítek a odesílacích tlačítek ve formulářích */
+body.dark-mode .btn-primary,
+body.dark-mode .form-container button[type="submit"] {
+    background-color: #4a90e2; /* Jasná modrá, aby tlačítko vyniklo */
+    color: #ffffff; /* Čistě bílý text pro čitelnost */
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Vzhled po najetí myší (zruší původní zelenou) */
+body.dark-mode .btn-primary:hover,
+body.dark-mode .form-container button[type="submit"]:hover {
+    background-color: #357abd; /* O něco tmavší modrá po najetí */
+    color: #ffffff;
 }
