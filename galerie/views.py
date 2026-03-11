@@ -1,7 +1,7 @@
 import json  # Make sure json is imported at the top
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .forms import PhotoUploadForm
+from .forms import PhotoUploadForm, PhotoEditForm
 from .models import Photo
 from django_ratelimit.decorators import ratelimit
 
@@ -80,3 +80,38 @@ def upload_photo(request):
 
     return render(request, 'galerie/upload.html', {'form': form})
 
+# 1. Zobrazení tabulky všech fotek
+@login_required
+def manage_photos(request):
+    # Vytáhneme všechny fotky seřazené od nejnovější
+    photos = Photo.objects.all().order_by('-timestamp')
+    return render(request, 'galerie/manage_photos.html', {'photos': photos})
+
+# 2. Úprava konkrétní fotky
+@login_required
+def edit_photo(request, pk):
+    # Najde fotku podle ID, nebo vyhodí chybu 404
+    photo = get_object_or_404(Photo, pk=pk)
+    
+    if request.method == 'POST':
+        # Nahráváme data do formuláře a říkáme mu, ať upraví EXISTUJÍCÍ instanci
+        form = PhotoEditForm(request.POST, instance=photo)
+        if form.is_valid():
+            form.save()
+            return redirect('galerie:manage_photos')
+    else:
+        # Prázdný formulář už předvyplněný současnými daty
+        form = PhotoEditForm(instance=photo)
+        
+    return render(request, 'galerie/edit_photo.html', {'form': form, 'photo': photo})
+
+# 3. Smazání fotky
+@login_required
+def delete_photo(request, pk):
+    photo = get_object_or_404(Photo, pk=pk)
+    if request.method == 'POST':
+        photo.delete() # Toto díky vašemu kódu v models.py smaže i soubor na Cloudinary!
+        return redirect('galerie:manage_photos')
+    
+    # Pokud se sem dostane bez POST metody, ukážeme mu potvrzovací stránku
+    return render(request, 'galerie/confirm_delete.html', {'photo': photo})

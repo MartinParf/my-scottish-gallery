@@ -14,3 +14,14 @@ class PhotoUploadForm(forms.ModelForm):
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
         }
+
+class PhotoEditForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        # Všimněte si, že tu CHYBÍ pole 'image'. To chrání originální fotku.
+        fields = ['title', 'description', 'category', 'is_public', 'latitude', 'longitude', 'date_taken']
+        
+        # HTML widget pro hezký výběr data a času
+        widgets = {
+            'date_taken': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }

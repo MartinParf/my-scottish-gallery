@@ -1,0 +1,24 @@
+{% extends 'galerie/base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-20 bg-white dark:bg-darksurface p-8 rounded-2xl shadow-xl transition-colors text-center border border-red-100 dark:border-red-900/30">
+    <div class="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 text-3xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Delete Photo?</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">Are you sure you want to permanently delete the photo <strong>"{{ photo.title }}"</strong>? This action cannot be undone.</p>
+    
+    {% if photo.image %}
+    <img src="{{ photo.image.url }}" class="w-full h-40 object-cover rounded-xl mb-8 opacity-80">
+    {% endif %}
+
+    <form method="post" class="flex gap-4">
+        {% csrf_token %}
+        <a href="{% url 'galerie:manage_photos' %}" class="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-xl transition-colors text-center">Cancel</a>
+        <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md">
+            Yes, Delete
+        </button>
+    </form>
+</div>
+{% endblock %}

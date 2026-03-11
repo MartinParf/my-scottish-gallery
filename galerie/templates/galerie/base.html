@@ -55,6 +55,7 @@
                     <li><a href="{% url 'galerie:photo_list' %}" class="hover:text-accent transition-colors">Map</a></li>
                     <li><a href="{% url 'galerie:about_us' %}" class="hover:text-accent transition-colors">About Us</a></li>
                     {% if user.is_authenticated %}
+                        <li><a href="{% url 'galerie:manage_photos' %}" class="hover:text-accent transition-colors"><i class="fa-solid fa-images mr-1"></i> Manage</a></li>
                         <li><a href="{% url 'galerie:upload_photo' %}" class="hover:text-accent transition-colors">Upload Photo</a></li>
                         <li>
                             <form action="{% url 'logout' %}" method="post" class="inline">
@@ -82,7 +83,9 @@
                 <li><a href="{% url 'galerie:photo_list' %}" class="block hover:text-accent transition-colors">Map</a></li>
                 <li><a href="{% url 'galerie:about_us' %}" class="block hover:text-accent transition-colors">About Us</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'galerie:upload_photo' %}" class="block hover:text-accent transition-colors">Upload Photo</a></li>
+                <li><a href="{% url 'galerie:manage_photos' %}" class="hover:text-accent transition-colors"><i class="fa-solid fa-images mr-1"></i> Manage</a></li>    
+                <li><a href="{% url 'galerie:upload_photo' %}" class="block hover:text-accent transition-colors">Upload Photo</a></li>
+                    
                     <li class="px-4">
                         <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}

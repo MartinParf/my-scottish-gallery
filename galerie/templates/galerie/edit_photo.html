@@ -1,0 +1,76 @@
+{% extends 'galerie/base.html' %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .django-form label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
+        .dark .django-form label { color: #d1d5db; }
+        .django-form input, .django-form textarea, .django-form select {
+            width: 100%; padding: 0.625rem 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db;
+            background-color: #f9fafb; color: #111827; outline: none; transition: all 0.2s; margin-bottom: 1.25rem;
+        }
+        .dark .django-form input, .dark .django-form textarea, .dark .django-form select {
+            background-color: #374151; border-color: #4b5563; color: #f3f4f6;
+        }
+        .django-form input[type="checkbox"] { width: auto; display: inline-block; margin-right: 0.5rem; cursor: pointer; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto my-8 bg-white dark:bg-darksurface p-6 md:p-8 rounded-2xl shadow-xl transition-colors w-full">
+    <div class="flex items-center justify-between mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <h2 class="text-3xl font-serif font-bold text-brand dark:text-white">Edit Photo</h2>
+        <a href="{% url 'galerie:manage_photos' %}" class="text-gray-500 hover:text-brand dark:hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></a>
+    </div>
+    
+    <div class="flex justify-center mb-6">
+        <img src="{{ photo.image.url }}" class="h-48 object-cover rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+    </div>
+
+    <form method="post" class="django-form flex flex-col">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="mb-4 mt-2">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Adjust GPS Location</label>
+            <div id="editMap" class="h-[250px] w-full rounded-xl border border-gray-300 dark:border-gray-600 z-10"></div>
+            <p class="text-xs text-gray-500 mt-2">Click anywhere on the map to change the pin location.</p>
+        </div>
+
+        <div class="flex gap-4 mt-6">
+            <a href="{% url 'galerie:manage_photos' %}" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-xl transition-colors">Cancel</a>
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md">
+                <i class="fa-solid fa-floppy-disk mr-2"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const editMap = L.map('editMap').setView([56.8, -4.2026], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(editMap);
+
+    let marker;
+    const latInput = document.querySelector('input[name="latitude"]');
+    const lonInput = document.querySelector('input[name="longitude"]');
+
+    function setMarker(lat, lon) {
+        if(marker) editMap.removeLayer(marker);
+        marker = L.marker([lat, lon]).addTo(editMap);
+        latInput.value = lat.toFixed(6);
+        lonInput.value = lon.toFixed(6);
+    }
+
+    if(latInput && lonInput && latInput.value && lonInput.value) {
+        let lat = parseFloat(latInput.value);
+        let lon = parseFloat(lonInput.value);
+        setMarker(lat, lon);
+        editMap.setView([lat, lon], 12);
+    }
+
+    editMap.on('click', function(e) {
+        setMarker(e.latlng.lat, e.latlng.lng);
+    });
+</script>
+{% endblock %}

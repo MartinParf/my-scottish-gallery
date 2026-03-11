@@ -1,0 +1,71 @@
+{% extends 'galerie/base.html' %}
+
+{% block title %}Photo Hub | Scottish Gallery{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto my-8 p-4 md:p-8 w-full">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-serif font-bold text-brand dark:text-white">Photo Hub</h1>
+        <a href="{% url 'galerie:upload_photo' %}" class="bg-accent hover:bg-brand text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-md">
+            <i class="fa-solid fa-plus mr-1"></i> New
+        </a>
+    </div>
+
+    <div class="bg-white dark:bg-darksurface rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
+                        <th class="p-4 font-semibold">Preview</th>
+                        <th class="p-4 font-semibold">Title & Category</th>
+                        <th class="p-4 font-semibold hidden sm:table-cell">Date Taken</th>
+                        <th class="p-4 font-semibold text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    {% for photo in photos %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
+                        <td class="p-4 w-24">
+                            {% if photo.image %}
+                            <img src="{{ photo.image.url }}" class="w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            <div class="font-bold text-gray-800 dark:text-gray-200 text-base">{{ photo.title }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                                <span class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md"><i class="fa-solid fa-tag mr-1"></i>{{ photo.get_category_display }}</span>
+                                {% if not photo.is_public %}
+                                <span class="text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-md"><i class="fa-solid fa-lock mr-1"></i>Private</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="p-4 hidden sm:table-cell text-sm text-gray-600 dark:text-gray-400">
+                            {% if photo.date_taken %}
+                                {{ photo.date_taken|date:"d. m. Y" }}
+                            {% else %}
+                                <span class="text-gray-400 italic">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                            <a href="{% url 'galerie:edit_photo' photo.pk %}" class="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800 px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                <i class="fa-solid fa-pen-to-square sm:mr-1"></i> <span class="hidden sm:inline">Edit</span>
+                            </a>
+                            <a href="{% url 'galerie:delete_photo' photo.pk %}" class="inline-flex items-center bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800 px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
+                                <i class="fa-solid fa-trash sm:mr-1"></i> <span class="hidden sm:inline">Delete</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-12 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
+                            <p>No photos yet. Time to upload some memories!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
