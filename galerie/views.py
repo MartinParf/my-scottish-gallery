@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import PhotoUploadForm
 from .models import Photo
+from django_ratelimit.decorators import ratelimit
 
 
 def photo_list(request):
@@ -55,6 +56,7 @@ def about_us(request):
 # The decorator ensures that only an authenticated user can access this view.
 # If not authenticated, Django will automatically redirect to the login page.
 @login_required 
+@ratelimit(key='ip', rate='5/m', block=True)
 def upload_photo(request):
     if request.method == 'POST':
         # request.FILES is crucial: it contains the uploaded image file.

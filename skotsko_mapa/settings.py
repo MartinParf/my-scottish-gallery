@@ -172,3 +172,26 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Redirects after login and logout
 LOGIN_REDIRECT_URL = 'galerie:photo_list'
 LOGOUT_REDIRECT_URL = 'galerie:photo_list'
+
+# ==========================================
+# BEZPEČNOSTNÍ ŠTÍTY PRO PRODUKCI (Fly.io)
+# ==========================================
+# Tyto štíty se aktivují POUZE, když je DEBUG = False (tedy na ostrém serveru).
+# Na lokálu (DEBUG = True) zůstanou vypnuté, aby se vám dobře vyvíjelo.
+
+if not DEBUG:
+    # 1. Řekne Djangu, že šifrování (HTTPS) obstarává Fly.io před ním
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    
+    # 2. Vynutí, aby se úplně každý přesměroval z nezabezpečeného HTTP na bezpečné HTTPS
+    SECURE_SSL_REDIRECT = True
+    
+    # 3. Přihlašovací cookies budou cestovat jen přes šifrované spojení (nelze je ukrást na veřejné Wi-Fi)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # 4. Zakáže vložení vašeho webu do cizí stránky (ochrana proti Clickjackingu)
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # 5. Zapne ochranu prohlížeče proti podvrženým skriptům
+    SECURE_BROWSER_XSS_FILTER = True
