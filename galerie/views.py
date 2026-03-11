@@ -12,7 +12,12 @@ def photo_list(request):
         photos = Photo.objects.all()
     else:
         photos = Photo.objects.filter(is_public=True)
-        
+
+    # --- NOVÉ: Získání unikátních roků pro filtry ---
+    # Najde všechny fotky, které mají datum, vycucne z nich jen rok, seřadí je sestupně a odstraní duplikáty
+    available_years_qs = Photo.objects.exclude(date_taken__isnull=True).dates('date_taken', 'year', order='DESC')
+    available_years = [d.year for d in available_years_qs]
+
     # 2. Prepare data for the map (bridge between Python and JavaScript)
     map_data = []
     for photo in photos:
@@ -38,7 +43,10 @@ def photo_list(request):
                 'thumb_url': thumb_url,  # ZDE POSÍLÁME MINIATURU
                 'full_url': full_url,    # ZDE POSÍLÁME ORIGINÁL
                 'desc': photo.description if photo.description else '',
-                'category': photo.category
+                'category': photo.category,
+                # --- NOVÉ: Přidáváme data o čase do JSONu pro JavaScript ---
+                'year': photo.date_taken.year if photo.date_taken else None,
+                'date_formatted': photo.date_taken.strftime('%d. %m. %Y') if photo.date_taken else ''
             })
             
     # json.dumps converts the Python list into JSON text
@@ -47,7 +55,8 @@ def photo_list(request):
     # 3. Send both photos and JSON data to the template
     return render(request, 'galerie/photo_list.html', {
         'photos': photos,
-        'photos_json': photos_json 
+        'photos_json': photos_json,
+        'available_years': available_years  # Posíláme roky do šablony
     })
 
 def about_us(request):

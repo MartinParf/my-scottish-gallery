@@ -27,13 +27,40 @@
 {% block content %}
 <div class="flex flex-col h-[calc(100vh-68px)] w-full relative">
     
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex flex-wrap justify-center gap-2 w-[90%] md:w-auto">
-        <button class="filter-btn active px-4 py-2 rounded-full font-semibold text-sm transition-all bg-accent text-white shadow-lg hover:scale-105" data-filter="all">🌍 All</button>
-        <button class="filter-btn px-4 py-2 rounded-full font-semibold text-sm transition-all bg-white dark:bg-darksurface text-gray-700 dark:text-gray-200 border border-transparent shadow-md hover:scale-105" data-filter="nature">🌲 Nature</button>
-        <button class="filter-btn px-4 py-2 rounded-full font-semibold text-sm transition-all bg-white dark:bg-darksurface text-gray-700 dark:text-gray-200 border border-transparent shadow-md hover:scale-105" data-filter="architecture">🏰 Architecture</button>
-        <button class="filter-btn px-4 py-2 rounded-full font-semibold text-sm transition-all bg-white dark:bg-darksurface text-gray-700 dark:text-gray-200 border border-transparent shadow-md hover:scale-105" data-filter="animals">🐾 Animals</button>
-        <button class="filter-btn px-4 py-2 rounded-full font-semibold text-sm transition-all bg-white dark:bg-darksurface text-gray-700 dark:text-gray-200 border border-transparent shadow-md hover:scale-105" data-filter="people">❤️ People</button>
-        <button class="filter-btn px-4 py-2 rounded-full font-semibold text-sm transition-all bg-white dark:bg-darksurface text-gray-700 dark:text-gray-200 border border-transparent shadow-md hover:scale-105" data-filter="fun">🍻 Fun</button>
+    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex gap-3 w-[95%] md:w-auto justify-center">
+
+        <div class="relative dropdown-container">
+            <button onclick="toggleDropdown('catDropdown')" class="px-5 py-2.5 bg-white dark:bg-darksurface rounded-full shadow-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-700">
+                <i class="fa-solid fa-filter text-accent"></i>
+                <span id="activeCatLabel">All Categories</span>
+                <i class="fa-solid fa-chevron-down text-xs ml-1 text-gray-400"></i>
+            </button>
+            <div id="catDropdown" class="hidden absolute top-full left-0 mt-2 w-48 bg-white dark:bg-darksurface rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-accent bg-gray-50 dark:bg-gray-800" data-filter="all" data-name="All Categories">🌍 All Categories</button>
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-filter="nature" data-name="Nature">🌲 Nature</button>
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-filter="architecture" data-name="Architecture">🏰 Architecture</button>
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-filter="animals" data-name="Animals">🐾 Animals</button>
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-filter="people" data-name="People">❤️ People</button>
+                <button class="cat-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-filter="fun" data-name="Fun">🍻 Fun</button>
+            </div>
+        </div>
+
+        {% if available_years %}
+        <div class="relative dropdown-container">
+            <button onclick="toggleDropdown('yearDropdown')" class="px-5 py-2.5 bg-white dark:bg-darksurface rounded-full shadow-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-700">
+                <i class="fa-regular fa-calendar text-brand dark:text-blue-400"></i>
+                <span id="activeYearLabel">All Time</span>
+                <i class="fa-solid fa-chevron-down text-xs ml-1 text-gray-400"></i>
+            </button>
+            <div id="yearDropdown" class="hidden absolute top-full right-0 mt-2 w-36 bg-white dark:bg-darksurface rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-64 overflow-y-auto">
+                <button class="year-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-brand dark:border-blue-400 bg-gray-50 dark:bg-gray-800" data-year="all">All Time</button>
+                {% for year in available_years %}
+                    <button class="year-filter-btn px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-semibold border-l-4 border-transparent" data-year="{{ year }}">{{ year }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 
     <div id="map" class="w-full h-full"></div>
@@ -91,14 +118,23 @@
 
     let currentFilteredPhotos = [];
     let currentPhotoIndex = 0;
+    
+    // Paměť pro aktuálně zvolené filtry
+    let activeCategory = 'all';
+    let activeYear = 'all';
 
-    // Funkce pro piny
-    function renderMarkers(filterType) {
+    // Funkce pro piny (využívá obě podmínky)
+    function renderMarkers() {
         markers.clearLayers();
         currentFilteredPhotos = [];
         
         photosData.forEach(photo => {
-            if (filterType === 'all' || photo.category === filterType) {
+            // Kontrola shody obou filtrů
+            const matchCategory = (activeCategory === 'all' || photo.category === activeCategory);
+            // photo.year je číslo, activeYear z data atributu je text, použijeme == místo ===
+            const matchYear = (activeYear === 'all' || photo.year == activeYear); 
+
+            if (matchCategory && matchYear) {
                 currentFilteredPhotos.push(photo);
                 const currentIndex = currentFilteredPhotos.length - 1;
                 const conf = catConfig[photo.category] || catConfig['default'];
@@ -106,16 +142,20 @@
                 const customIcon = L.divIcon({
                     className: 'custom-pin',
                     html: `<div class="pin-body" style="--pin-color: ${conf.color};"><i class="fa-solid ${conf.icon}"></i></div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 30],
-                    popupAnchor: [0, -30]
+                    iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -30]
                 });
 
                 const marker = L.marker([photo.lat, photo.lon], { icon: customIcon });
                 
-                let popupContent = `<h4 class="font-bold text-gray-800">${photo.title}</h4>`;
+                let popupContent = `<h4 class="font-bold text-gray-800 text-base">${photo.title}</h4>`;
+                
+                // Přidání hezkého datumu pod titulek, pokud existuje
+                if (photo.date_formatted) {
+                    popupContent += `<p class="text-xs text-brand font-semibold mb-2"><i class="fa-regular fa-calendar mr-1"></i>${photo.date_formatted}</p>`;
+                }
+
                 if (photo.thumb_url) {
-                    popupContent += `<img src="${photo.thumb_url}" onclick="openModal(${currentIndex})" class="w-full rounded-lg mt-2 cursor-pointer hover:opacity-80 transition-opacity">`;
+                    popupContent += `<img src="${photo.thumb_url}" onclick="openModal(${currentIndex})" class="w-full rounded-lg mt-1 cursor-pointer hover:opacity-80 transition-opacity">`;
                 }
                 if (photo.desc) {
                     let shortDesc = photo.desc.length > 50 ? photo.desc.substring(0, 50) + "..." : photo.desc;
@@ -127,24 +167,75 @@
         });
     }
 
-    // Filtrování tlačítek s Tailwind classes
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    // --- LOGIKA PRO DROPDOWN MENU A FILTRY ---
+
+    // Otevírání/zavírání menu
+    function toggleDropdown(id) {
+        const dropdown = document.getElementById(id);
+        // Zavře to druhé menu, pokud je otevřené
+        if (id === 'catDropdown' && document.getElementById('yearDropdown')) {
+            document.getElementById('yearDropdown').classList.add('hidden');
+        } else if (id === 'yearDropdown') {
+            document.getElementById('catDropdown').classList.add('hidden');
+        }
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Zavření menu po kliknutí kamkoliv jinam na mapu
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-container')) {
+            document.getElementById('catDropdown')?.classList.add('hidden');
+            document.getElementById('yearDropdown')?.classList.add('hidden');
+        }
+    });
+
+    // Kliknutí na položku v menu Kategorií
+    document.querySelectorAll('.cat-filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            // Reset všech tlačítek na výchozí "neaktivní" stav
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                b.classList.remove('bg-accent', 'text-white');
-                b.classList.add('bg-white', 'dark:bg-darksurface', 'text-gray-700', 'dark:text-gray-200');
+            // Odebere zvýraznění u všech
+            document.querySelectorAll('.cat-filter-btn').forEach(b => {
+                b.classList.remove('border-accent', 'bg-gray-50', 'dark:bg-gray-800');
+                b.classList.add('border-transparent');
             });
-            // Nastavení aktivního tlačítka
-            this.classList.remove('bg-white', 'dark:bg-darksurface', 'text-gray-700', 'dark:text-gray-200');
-            this.classList.add('bg-accent', 'text-white');
+            // Přidá zvýraznění kliknutému
+            this.classList.remove('border-transparent');
+            this.classList.add('border-accent', 'bg-gray-50', 'dark:bg-gray-800');
             
-            renderMarkers(this.dataset.filter);
+            // Změní text na hlavním tlačítku a zavře menu
+            document.getElementById('activeCatLabel').textContent = this.dataset.name;
+            document.getElementById('catDropdown').classList.add('hidden');
+            
+            activeCategory = this.dataset.filter;
+            renderMarkers();
         });
     });
 
-    renderMarkers('all');
+    // Kliknutí na položku v menu Roků
+    document.querySelectorAll('.year-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Odebere zvýraznění u všech
+            document.querySelectorAll('.year-filter-btn').forEach(b => {
+                b.classList.remove('border-brand', 'dark:border-blue-400', 'bg-gray-50', 'dark:bg-gray-800');
+                b.classList.add('border-transparent');
+            });
+            // Přidá zvýraznění kliknutému
+            this.classList.remove('border-transparent');
+            this.classList.add('border-brand', 'dark:border-blue-400', 'bg-gray-50', 'dark:bg-gray-800');
+            
+            // Změní text na hlavním tlačítku a zavře menu
+            document.getElementById('activeYearLabel').textContent = this.textContent;
+            document.getElementById('yearDropdown').classList.add('hidden');
+            
+            activeYear = this.dataset.year;
+            renderMarkers();
+        });
+    });
 
+    // Prvotní vykreslení mapy
+    renderMarkers();
+
+    
+    
     // --- MODAL LOGIKA ---
     const modal = document.getElementById("photoModal");
     const modalImg = document.getElementById("modalImg");

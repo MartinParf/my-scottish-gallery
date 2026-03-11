@@ -6,6 +6,7 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
 from .utils import get_decimal_coordinates  # Import our helper function
+from datetime import datetime
 
 
 CATEGORY_CHOICES = [
@@ -51,7 +52,24 @@ class Photo(models.Model):
                 if lat and lon and not self.latitude and not self.longitude:
                     self.latitude = lat
                     self.longitude = lon
+                # --- B. Extrakce Času pořízení (Vylepšená verze) ---
+                if not self.date_taken:
+                    date_str = exif.get(36867) or exif.get(306)  # Zkusí DateTimeOriginal nebo obyčejné DateTime
                     
+                    # Pillow občas schovává data do podsekce (ExifOffset)
+                    if not date_str:
+                        try:
+                            exif_ifd = exif.get_ifd(0x8769)
+                            date_str = exif_ifd.get(36867)
+                        except Exception:
+                            pass
+                            
+                    if date_str:
+                        try:
+                            self.date_taken = datetime.strptime(str(date_str).strip(), '%Y:%m:%d %H:%M:%S')
+                        except Exception:
+                            pass     
+
             # 3. Resize (modern web standard)
             # If the photo is larger than 1920 pixels, downscale it
             output_size = (1920, 1920)
