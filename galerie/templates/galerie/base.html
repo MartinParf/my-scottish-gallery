@@ -1,69 +1,120 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="cs">
-<head>
+<html lang="en" class="light"> <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Scottish Gallery{% endblock %}</title>
     <link rel="icon" type="image/png" href="{% static 'galerie/images/scotland_flag.png' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'galerie/css/style.css' %}">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#2c3e50',
+                        accent: '#27ae60',
+                        darkbg: '#121212',
+                        darksurface: '#1e1e1e'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .dark .leaflet-layer {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+            transition: filter 0.3s ease;
+        }
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+    </style>
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <nav class="navbar">
-        <div class="container nav-content">
-            <a href="{% url 'galerie:photo_list' %}" class="logo">
-                <img src="{% static 'galerie/images/scotland_flag.png' %}" style="height: 1.2em; margin-right: 10px; vertical-align: middle;" alt="Scottish flag">
-                Scottish<span>Gallery</span>
+<body class="bg-gray-50 text-gray-800 dark:bg-darkbg dark:text-gray-200 min-h-screen flex flex-col font-sans">
+    
+    <nav class="bg-white dark:bg-darksurface shadow-md sticky top-0 z-[1000] px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            
+            <a href="{% url 'galerie:photo_list' %}" class="flex items-center text-xl font-serif font-bold text-brand dark:text-white transition-colors">
+                <img src="{% static 'galerie/images/scotland_flag.png' %}" class="h-5 mr-2" alt="Scottish flag">
+                Scottish<span class="text-accent">Gallery</span>
             </a>
-            <button class="hamburger" aria-label="Toggle navigation">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <ul class="nav-links">
-                <li><a href="{% url 'galerie:photo_list' %}">Map</a></li>
-                <li>
-                    <button id="darkModeToggle" class="btn-text" style="font-size: 1.2rem; padding: 0 10px; background: none; border: none; cursor: pointer; color: inherit;" title="Toggle dark mode">
-                        <i class="fa-solid fa-moon"></i>
-                    </button>
-                </li>
-                    <li><a href="{% url 'galerie:about_us' %}">About Us</a></li>
+            
+            <div class="flex items-center gap-2 md:gap-6">
+                
+                <ul class="hidden md:flex items-center gap-6 font-semibold">
+                    <li><a href="{% url 'galerie:photo_list' %}" class="hover:text-accent transition-colors">Map</a></li>
+                    <li><a href="{% url 'galerie:about_us' %}" class="hover:text-accent transition-colors">About Us</a></li>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'galerie:upload_photo' %}" class="hover:text-accent transition-colors">Upload Photo</a></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-brand dark:bg-gray-700 hover:bg-accent dark:hover:bg-accent text-white px-5 py-2 rounded-full transition-colors">Log Out</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}" class="bg-brand dark:bg-gray-700 hover:bg-accent dark:hover:bg-accent text-white px-5 py-2 rounded-full transition-colors">Log In</a></li>
+                    {% endif %}
+                </ul>
+
+                <button id="darkModeToggle" class="text-xl p-2 text-gray-500 hover:text-accent dark:text-gray-300 dark:hover:text-accent transition-colors" aria-label="Toggle Dark Mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+
+                <button id="mobileMenuBtn" class="md:hidden text-2xl p-2 text-gray-500 dark:text-gray-300" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobileMenu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-100 dark:border-gray-800">
+            <ul class="flex flex-col gap-4 mt-4 font-semibold text-center">
+                <li><a href="{% url 'galerie:photo_list' %}" class="block hover:text-accent transition-colors">Map</a></li>
+                <li><a href="{% url 'galerie:about_us' %}" class="block hover:text-accent transition-colors">About Us</a></li>
                 {% if user.is_authenticated %}
-                    <li><a href="{% url 'galerie:upload_photo' %}">Upload Photo</a></li>
-                    
-                    <li>
-                        <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    <li><a href="{% url 'galerie:upload_photo' %}" class="block hover:text-accent transition-colors">Upload Photo</a></li>
+                    <li class="px-4">
+                        <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" style="background:none; border:none; cursor:pointer; font-size:1rem;font-family:inherit; color:inherit; padding:0;">Log out</button>
+                            <button type="submit" class="w-full bg-brand dark:bg-gray-700 hover:bg-accent text-white px-4 py-2 rounded-full transition-colors">Log Out</button>
                         </form>
                     </li>
                 {% else %}
-                    <li><a href="{% url 'login' %}" class="btn-primary">Log in</a></li>
+                    <li class="px-4"><a href="{% url 'login' %}" class="block w-full bg-brand dark:bg-gray-700 hover:bg-accent text-white px-4 py-2 rounded-full transition-colors">Log In</a></li>
                 {% endif %}
             </ul>
         </div>
     </nav>
-    <main class="container main-content">
+
+    <main class="flex-grow flex flex-col">
         {% block content %}{% endblock %}
     </main>
-    <footer class="footer"><p>&copy; {% now "Y" %} My Scotland.</p></footer>
-    {% block extra_js %}{% endblock %}
+
     <script>
+        // Logika tmavého režimu přes Tailwind (hledá class="dark" na html)
+        const htmlTag = document.documentElement;
         const themeToggleBtn = document.getElementById('darkModeToggle');
         const themeIcon = themeToggleBtn.querySelector('i');
         
-        // Zkontrolujeme, zda uživatel už dříve zapnul tmavý režim
         if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark-mode');
+            htmlTag.classList.add('dark');
             themeIcon.classList.replace('fa-moon', 'fa-sun');
         }
 
         themeToggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
+            htmlTag.classList.toggle('dark');
+            const isDark = htmlTag.classList.contains('dark');
             
-            // Změna ikonky a uložení do paměti
             if (isDark) {
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
                 localStorage.setItem('theme', 'dark');
@@ -71,17 +122,15 @@
                 themeIcon.classList.replace('fa-sun', 'fa-moon');
                 localStorage.setItem('theme', 'light');
             }
-            
-            // Upozorníme mapu (nebo jiné komponenty), že se změnil motiv
             window.dispatchEvent(new Event('themeChanged'));
         });
 
-        // Mobilní hamburger menu
-        const hamburgerBtn = document.querySelector('.hamburger');
-        const navLinks = document.querySelector('.nav-links');
-        if (hamburgerBtn && navLinks) {
-            hamburgerBtn.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
+        // Mobilní menu
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
             });
         }
     </script>

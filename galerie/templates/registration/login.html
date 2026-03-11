@@ -1,9 +1,24 @@
 {% extends 'galerie/base.html' %}
 
 {% block content %}
-<div class="form-container">
-    <h2 style="text-align: center; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Log In</h2>
-    <form method="post">
+<style>
+    /* Styling pro Django formuláře */
+    .django-form label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
+    .dark .django-form label { color: #d1d5db; }
+    .django-form input {
+        width: 100%; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #d1d5db;
+        background-color: #f9fafb; color: #111827; outline: none; transition: all 0.2s; margin-bottom: 1.25rem;
+    }
+    .dark .django-form input {
+        background-color: #374151; border-color: #4b5563; color: #f3f4f6;
+    }
+    .django-form input:focus { border-color: #27ae60; box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2); }
+</style>
+
+<div class="max-w-md mx-auto my-16 bg-white dark:bg-darksurface p-8 rounded-2xl shadow-xl transition-colors">
+    <h2 class="text-3xl font-serif font-bold text-center text-brand dark:text-white mb-8">Log In</h2>
+    
+    <form method="post" class="django-form">
         {% csrf_token %}
         <div class="form-group">
             <label for="{{ form.username.id_for_label }}">Username:</label>
@@ -13,12 +28,16 @@
             <label for="{{ form.password.id_for_label }}">Password:</label>
             {{ form.password }}
         </div>
+        
         {% if form.errors %}
-        <div style="color: red; margin-bottom: 15px;">
-            <p>Invalid login credentials. Please try again.</p>
+        <div class="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg mb-6 text-sm text-center font-medium">
+            Invalid login credentials. Please try again.
         </div>
         {% endif %}
-        <button type="submit" class="btn-primary" style="width: 100%;">Log In</button>
+        
+        <button type="submit" class="w-full bg-brand hover:bg-accent dark:bg-gray-700 dark:hover:bg-accent text-white font-bold py-3 px-4 rounded-xl transition-colors mt-2 shadow-md">
+            Log In
+        </button>
     </form>
 </div>
 {% endblock %}
