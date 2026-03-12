@@ -159,6 +159,7 @@
     let activeCategory = 'all';
     let activeYear = 'all';
     let activeAlbum = 'all';
+    let activeTag = ''; // Nová proměnná pro aktivní hashtag
 
     const catConfig = {
         'nature': { color: '#27ae60', icon: 'fa-tree' }, 'architecture': { color: '#8e44ad', icon: 'fa-chess-rook' },
@@ -173,9 +174,13 @@
         currentFilteredPhotos = [];
         
         photosData.forEach(photo => {
-            if ((activeCategory === 'all' || photo.category === activeCategory) && 
-                (activeYear === 'all' || photo.year == activeYear) &&
-                (activeAlbum === 'all' || photo.album_id == activeAlbum)) {
+            const matchCategory = (activeCategory === 'all' || photo.category === activeCategory);
+            const matchYear = (activeYear === 'all' || photo.year == activeYear);
+            const matchAlbum = (activeAlbum === 'all' || photo.album_id == activeAlbum);
+            // Zkontroluje, zda fotka obsahuje aktivní tag
+            const matchTag = (activeTag === '' || (photo.tags && photo.tags.toLowerCase().includes(activeTag.toLowerCase())));
+
+            if (matchCategory && matchYear && matchAlbum && matchTag) {
                 currentFilteredPhotos.push(photo);
             }
         });
@@ -277,6 +282,7 @@
             document.getElementById('activeCatLabel').textContent = this.dataset.name;
             document.getElementById('catDropdown').classList.add('hidden');
             activeCategory = this.dataset.filter;
+            activeTag = ''; // <--- Zruší filtrování tagů
             renderContent();
         });
     });
@@ -313,9 +319,45 @@
         modalImg.style.opacity = '0';
         skeleton.classList.remove('hidden');
         modalImg.src = photo.full_url;
+        
         let captionHtml = `<h3 class="text-xl font-bold">${photo.title}</h3>`;
         if (photo.desc) captionHtml += `<p class="mt-2 text-gray-200 text-sm">${photo.desc}</p>`;
+        
+        // --- VYKRESLENÍ TAGŮ DO LIGHTBOXU ---
+        if (photo.tags) {
+            const tagArray = photo.tags.split(',').map(t => t.trim()).filter(t => t);
+            if (tagArray.length > 0) {
+                captionHtml += `<div class="mt-3 flex flex-wrap justify-center gap-2">`;
+                tagArray.forEach(tag => {
+                    captionHtml += `<span onclick="filterByTag('${tag}', event)" class="bg-white/20 hover:bg-white/40 cursor-pointer backdrop-blur-md text-white text-[10px] md:text-xs px-2 py-1 rounded-full transition-colors"><i class="fa-solid fa-hashtag mr-0.5 opacity-70"></i>${tag}</span>`;
+                });
+                captionHtml += `</div>`;
+            }
+        }
         modalCaption.innerHTML = captionHtml;
+    }
+
+    // --- FUNKCE PRO FILTROVÁNÍ KLIKNUTÍM NA TAG ---
+    function filterByTag(tag, event) {
+        if(event) event.stopPropagation();
+        closeModal(); // Zavře fotku
+        
+        // Vynuluje všechny ostatní filtry a nastaví jen Tag
+        activeCategory = 'all';
+        activeYear = 'all';
+        activeAlbum = 'all';
+        activeTag = tag;
+
+        // Vizuálně změní nápis v roletkách, abychom věděli, co filtrujeme
+        document.querySelectorAll('.cat-filter-btn, .year-filter-btn, .album-filter-btn').forEach(b => {
+            b.classList.remove('border-accent', 'border-brand', 'border-purple-500', 'bg-gray-50', 'dark:bg-gray-800');
+            b.classList.add('border-transparent');
+        });
+        document.getElementById('activeCatLabel').textContent = `#${tag}`;
+        document.getElementById('activeYearLabel').textContent = "All Time";
+        document.getElementById('activeAlbumLabel').textContent = "All Albums";
+
+        renderContent();
     }
 
     function imageLoaded() {

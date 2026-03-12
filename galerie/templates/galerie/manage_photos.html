@@ -99,6 +99,7 @@
                     {% for photo in photos %}
                     <tr class="hover:bg-blue-50/50 dark:hover:bg-gray-700/30 transition-colors group photo-row" 
                         data-title="{{ photo.title|lower }}" 
+                        data-tags="{{ photo.tags|lower|default:'' }}" 
                         data-gps="{% if photo.latitude %}1{% else %}0{% endif %}" 
                         data-taken="{{ photo.date_taken|date:'YmdHis'|default:'0' }}" 
                         data-uploaded="{{ photo.timestamp|date:'YmdHis' }}">
@@ -174,7 +175,9 @@
             const query = this.value.toLowerCase();
             rows.forEach(row => {
                 const title = row.getAttribute('data-title');
-                row.style.display = title.includes(query) ? '' : 'none';
+                const tags = row.getAttribute('data-tags');
+                // Nyní hledá v titulku i v tazích!
+                row.style.display = (title.includes(query) || tags.includes(query)) ? '' : 'none';
             });
         });
 

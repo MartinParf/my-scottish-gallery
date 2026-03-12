@@ -48,9 +48,10 @@ def photo_list(request):
                 'category': photo.category,
                 'year': photo.date_taken.year if photo.date_taken else None,
                 'date_formatted': photo.date_taken.strftime('%d. %m. %Y') if photo.date_taken else '',
-                # --- NOVÉ: Přibalíme k fotce její album ---
                 'album_id': photo.album.id if photo.album else None,
-                'album_title': photo.album.title if photo.album else ''
+                'album_title': photo.album.title if photo.album else '',
+                # --- NOVÉ ---
+                'tags': photo.tags if photo.tags else ''
             })
             
     photos_json = json.dumps(map_data)

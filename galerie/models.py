@@ -28,8 +28,8 @@ class Album(models.Model):
         return self.title
 
 class Photo(models.Model):
-    title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='photos/')
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='photos/', max_length=255)
     description = models.TextField(blank=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)

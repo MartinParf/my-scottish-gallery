@@ -4,7 +4,8 @@ from .models import Photo
 class PhotoUploadForm(forms.ModelForm):
     class Meta:
         model = Photo
-        fields = ['title', 'image', 'description', 'is_public', 'category', 'latitude', 'longitude']
+        #fields = ['title', 'image', 'description', 'is_public', 'category', 'latitude', 'longitude']¨
+        fields = ['image', 'title', 'description', 'category', 'album', 'tags', 'is_public']
         
         # Add CSS classes for a modern look so the form does not feel outdated
         widgets = {
@@ -13,15 +14,18 @@ class PhotoUploadForm(forms.ModelForm):
             'category': forms.Select(attrs={'class': 'form-control'}),
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
+            'tags': forms.TextInput(attrs={'placeholder': 'e.g. mountains, sheep, rain'}),
         }
 
 class PhotoEditForm(forms.ModelForm):
     class Meta:
         model = Photo
         # Všimněte si, že tu CHYBÍ pole 'image'. To chrání originální fotku.
-        fields = ['title', 'description', 'category', 'is_public', 'latitude', 'longitude', 'date_taken']
+        #fields = ['title', 'description', 'category', 'is_public', 'latitude', 'longitude', 'date_taken']
+        fields = ['title', 'description', 'category', 'album', 'tags', 'is_public', 'latitude', 'longitude', 'date_taken']
         
         # HTML widget pro hezký výběr data a času
         widgets = {
             'date_taken': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'tags': forms.TextInput(attrs={'placeholder': 'e.g. mountains, sheep, rain'}),
         }
