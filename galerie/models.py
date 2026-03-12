@@ -30,6 +30,8 @@ class Photo(models.Model):
     tagged_people = models.ManyToManyField(User, blank=True, related_name="photos_of_me")
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='nature', verbose_name="Category")
 
+    tags = models.CharField(max_length=255, blank=True, help_text="AI or manual tags separated by comma")
+    
     def __str__(self) -> str:
         return self.title
 

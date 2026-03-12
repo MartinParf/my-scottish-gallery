@@ -3,64 +3,88 @@
 {% block title %}Photo Hub | Scottish Gallery{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto my-8 p-4 md:p-8 w-full">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-serif font-bold text-brand dark:text-white">Photo Hub</h1>
-        <a href="{% url 'galerie:upload_photo' %}" class="bg-accent hover:bg-brand text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-md">
-            <i class="fa-solid fa-plus mr-1"></i> New
-        </a>
+<div class="max-w-7xl mx-auto my-8 p-4 w-full">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <h1 class="text-3xl font-serif font-bold text-brand dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-accent text-2xl"></i> Photo Hub
+        </h1>
+        <div class="flex gap-2">
+            <input type="text" id="quickSearch" placeholder="Quick search..." class="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-darksurface text-gray-800 dark:text-gray-200 focus:outline-none focus:border-accent">
+            <a href="{% url 'galerie:upload_photo' %}" class="bg-brand hover:bg-accent text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-md text-sm flex items-center">
+                <i class="fa-solid fa-upload mr-2"></i> Upload
+            </a>
+        </div>
     </div>
 
-    <div class="bg-white dark:bg-darksurface rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
+    <div class="bg-white dark:bg-darksurface rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-800">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse text-sm whitespace-nowrap" id="photoTable">
                 <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider">
-                        <th class="p-4 font-semibold">Preview</th>
-                        <th class="p-4 font-semibold">Title & Category</th>
-                        <th class="p-4 font-semibold hidden sm:table-cell">Date Taken</th>
-                        <th class="p-4 font-semibold text-right">Actions</th>
+                    <tr class="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 uppercase tracking-wider text-xs border-b border-gray-200 dark:border-gray-700">
+                        <th class="p-3 font-semibold w-12">Img</th>
+                        <th class="p-3 font-semibold cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-sort="title">Title <i class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                        <th class="p-3 font-semibold cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-center" data-sort="gps">GPS <i class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                        <th class="p-3 font-semibold cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" data-sort="taken">Taken (EXIF) <i class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                        <th class="p-3 font-semibold cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hidden md:table-cell" data-sort="uploaded">Uploaded <i class="fa-solid fa-sort ml-1 text-gray-400"></i></th>
+                        <th class="p-3 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800" id="tableBody">
                     {% for photo in photos %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
-                        <td class="p-4 w-24">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group photo-row" 
+                        data-title="{{ photo.title|lower }}" 
+                        data-gps="{% if photo.latitude %}1{% else %}0{% endif %}" 
+                        data-taken="{{ photo.date_taken|date:'YmdHis'|default:'0' }}" 
+                        data-uploaded="{{ photo.timestamp|date:'YmdHis' }}">
+                        
+                        <td class="p-3">
                             {% if photo.image %}
-                            <img src="{{ photo.image.url }}" class="w-16 h-16 object-cover rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                            <img src="{{ photo.image.url }}" class="w-10 h-10 object-cover rounded shadow-sm border border-gray-200 dark:border-gray-700">
                             {% endif %}
                         </td>
-                        <td class="p-4">
-                            <div class="font-bold text-gray-800 dark:text-gray-200 text-base">{{ photo.title }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-                                <span class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-md"><i class="fa-solid fa-tag mr-1"></i>{{ photo.get_category_display }}</span>
-                                {% if not photo.is_public %}
-                                <span class="text-red-500 bg-red-50 dark:bg-red-900/30 px-2 py-0.5 rounded-md"><i class="fa-solid fa-lock mr-1"></i>Private</span>
-                                {% endif %}
-                            </div>
+                        
+                        <td class="p-3">
+                            <div class="font-bold text-gray-800 dark:text-gray-200 truncate max-w-[200px]">{{ photo.title }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">{{ photo.get_category_display }}</div>
                         </td>
-                        <td class="p-4 hidden sm:table-cell text-sm text-gray-600 dark:text-gray-400">
+                        
+                        <td class="p-3 text-center">
+                            {% if photo.latitude and photo.longitude %}
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full" title="{{ photo.latitude|floatformat:4 }}, {{ photo.longitude|floatformat:4 }}">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center justify-center w-6 h-6 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full" title="Missing GPS">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="p-3 text-gray-700 dark:text-gray-300">
                             {% if photo.date_taken %}
                                 {{ photo.date_taken|date:"d. m. Y" }}
+                                <div class="text-xs text-gray-400">{{ photo.date_taken|date:"H:i" }}</div>
                             {% else %}
-                                <span class="text-gray-400 italic">Unknown</span>
+                                <span class="text-red-500 text-xs font-bold bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">MISSING</span>
                             {% endif %}
                         </td>
-                        <td class="p-4 text-right space-x-2 whitespace-nowrap">
-                            <a href="{% url 'galerie:edit_photo' photo.pk %}" class="inline-flex items-center bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800 px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
-                                <i class="fa-solid fa-pen-to-square sm:mr-1"></i> <span class="hidden sm:inline">Edit</span>
+                        
+                        <td class="p-3 text-gray-500 dark:text-gray-400 text-xs hidden md:table-cell">
+                            {{ photo.timestamp|date:"d. m. Y" }}
+                        </td>
+                        
+                        <td class="p-3 text-right space-x-1">
+                            <a href="{% url 'galerie:edit_photo' photo.pk %}" class="inline-block p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors" title="Edit">
+                                <i class="fa-solid fa-pen"></i>
                             </a>
-                            <a href="{% url 'galerie:delete_photo' photo.pk %}" class="inline-flex items-center bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-800 px-3 py-2 rounded-lg text-sm font-semibold transition-colors">
-                                <i class="fa-solid fa-trash sm:mr-1"></i> <span class="hidden sm:inline">Delete</span>
+                            <a href="{% url 'galerie:delete_photo' photo.pk %}" class="inline-block p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="p-12 text-center text-gray-500 dark:text-gray-400">
-                            <i class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
-                            <p>No photos yet. Time to upload some memories!</p>
-                        </td>
+                        <td colspan="6" class="p-8 text-center text-gray-500">No photos found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -68,4 +92,60 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // 1. QUICK SEARCH (Rychlé filtrování podle názvu)
+        const searchInput = document.getElementById('quickSearch');
+        const rows = document.querySelectorAll('.photo-row');
+        
+        searchInput.addEventListener('keyup', function() {
+            const query = this.value.toLowerCase();
+            rows.forEach(row => {
+                const title = row.getAttribute('data-title');
+                row.style.display = title.includes(query) ? '' : 'none';
+            });
+        });
+
+        // 2. EXCEL SORTING (Řazení kliknutím na hlavičku)
+        const tableBody = document.getElementById('tableBody');
+        const headers = document.querySelectorAll('th[data-sort]');
+        let currentSort = { column: '', direction: 'asc' };
+
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const sortKey = header.getAttribute('data-sort');
+                const isAsc = currentSort.column === sortKey ? currentSort.direction !== 'asc' : true;
+                
+                currentSort = { column: sortKey, direction: isAsc ? 'asc' : 'desc' };
+                
+                // Reset ikonek
+                headers.forEach(h => h.querySelector('i').className = 'fa-solid fa-sort ml-1 text-gray-400');
+                // Nastavení aktivní ikonky
+                header.querySelector('i').className = `fa-solid fa-sort-${isAsc ? 'up' : 'down'} ml-1 text-brand dark:text-white`;
+
+                const rowsArray = Array.from(tableBody.querySelectorAll('.photo-row'));
+                
+                rowsArray.sort((a, b) => {
+                    let valA = a.getAttribute(`data-${sortKey}`);
+                    let valB = b.getAttribute(`data-${sortKey}`);
+
+                    // Pokud řadíme čísla (datum, gps status)
+                    if (['gps', 'taken', 'uploaded'].includes(sortKey)) {
+                        valA = parseInt(valA) || 0;
+                        valB = parseInt(valB) || 0;
+                        return isAsc ? valA - valB : valB - valA;
+                    }
+                    
+                    // Pokud řadíme text (titulek)
+                    return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                });
+
+                // Překreslení tabulky
+                tableBody.innerHTML = '';
+                rowsArray.forEach(row => tableBody.appendChild(row));
+            });
+        });
+    });
+</script>
 {% endblock %}

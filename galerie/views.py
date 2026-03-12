@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import PhotoUploadForm, PhotoEditForm
 from .models import Photo
 from django_ratelimit.decorators import ratelimit
+from django.contrib import messages
 
 
 def photo_list(request):
@@ -74,6 +75,7 @@ def upload_photo(request):
             photo = form.save(commit=False)  # Briefly stop before saving
             # Here we could assign an owner to the photo (e.g. photo.owner = request.user)
             photo.save()  # This triggers the compression and GPS extraction logic in models.py
+            messages.success(request, 'Photo was successfully uploaded!')
             return redirect('galerie:photo_list')  # After success, redirect back to the map
     else:
         form = PhotoUploadForm()  # If user just opened the page, show an empty form
@@ -98,6 +100,7 @@ def edit_photo(request, pk):
         form = PhotoEditForm(request.POST, instance=photo)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Changes saved successfully!')
             return redirect('galerie:manage_photos')
     else:
         # Prázdný formulář už předvyplněný současnými daty
@@ -111,6 +114,7 @@ def delete_photo(request, pk):
     photo = get_object_or_404(Photo, pk=pk)
     if request.method == 'POST':
         photo.delete() # Toto díky vašemu kódu v models.py smaže i soubor na Cloudinary!
+        messages.success(request, 'Photo was permanently deleted.')
         return redirect('galerie:manage_photos')
     
     # Pokud se sem dostane bez POST metody, ukážeme mu potvrzovací stránku
