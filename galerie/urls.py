@@ -12,4 +12,6 @@ urlpatterns = [
     path('manage/', views.manage_photos, name='manage_photos'),
     path('manage/<int:pk>/edit/', views.edit_photo, name='edit_photo'),
     path('manage/<int:pk>/delete/', views.delete_photo, name='delete_photo'),
+    path('manage/export-zip/', views.export_photos_zip, name='export_photos_zip'),
+    path('manage/bulk-upload/', views.bulk_upload, name='bulk_upload'),
 ]

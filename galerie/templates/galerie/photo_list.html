@@ -7,137 +7,149 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     
     <style>
-        /* Interaktivní piny (při najetí povyskočí) */
         .custom-pin { background: transparent; border: none; }
         .pin-body {
-            background-color: var(--pin-color);
-            width: 30px; height: 30px;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
+            background-color: var(--pin-color); width: 30px; height: 30px;
+            border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3); border: 2px solid white;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .custom-pin:hover .pin-body {
-            transform: rotate(-45deg) scale(1.2);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
+        .custom-pin:hover .pin-body { transform: rotate(-45deg) scale(1.2); box-shadow: 0 6px 12px rgba(0,0,0,0.5); z-index: 1000; }
         .pin-body i { transform: rotate(45deg); color: white; font-size: 14px; }
         .leaflet-popup-content { width: 250px !important; text-align: center; }
         
-        /* Masonry Grid pro Pinterest styl */
-        .masonry-grid { column-count: 1; column-gap: 1rem; }
-        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
-        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
-        @media (min-width: 1280px) { .masonry-grid { column-count: 4; } }
-        .masonry-item { break-inside: avoid; margin-bottom: 1rem; }
+        .masonry-grid { column-count: 2; column-gap: 0.5rem; } 
+        .masonry-item { break-inside: avoid; margin-bottom: 0.5rem; }
+        @media (min-width: 640px) { .masonry-grid { column-count: 3; column-gap: 1rem; } .masonry-item { margin-bottom: 1rem; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 4; } } 
+        @media (min-width: 1500px) { .masonry-grid { column-count: 5; } } 
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="flex flex-col h-[calc(100vh-68px)] w-full relative bg-gray-50 dark:bg-darkbg">
+<div class="absolute top-0 left-0 w-full h-screen bg-gray-50 dark:bg-darkbg z-0">
     
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] flex flex-wrap gap-3 w-[95%] md:w-auto justify-center p-2 bg-white/70 dark:bg-darksurface/70 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+    <div class="absolute top-[84px] left-1/2 -translate-x-1/2 z-[1000] w-[95%] md:w-auto flex flex-col items-center gap-2">
         
-        <div class="flex bg-gray-200/50 dark:bg-gray-800/50 rounded-full p-1">
-            <button id="btnMap" class="px-4 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all"><i class="fa-solid fa-map-location-dot mr-1"></i> Map</button>
-            <button id="btnGallery" class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all"><i class="fa-solid fa-border-all mr-1"></i> Gallery</button>
+        <div class="flex items-center bg-white/80 dark:bg-darksurface/80 backdrop-blur-md rounded-full p-1.5 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
+            <button id="btnMap" class="px-5 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all"><i class="fa-solid fa-map-location-dot mr-1"></i> Map</button>
+            <button id="btnGallery" class="px-5 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all"><i class="fa-solid fa-border-all mr-1"></i> Gallery</button>
+            
+            <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1 md:mx-2"></div> <button id="btnToggleFilters" class="px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders"></i> Filters <i id="filterChevron" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+            </button>
         </div>
 
-        <div class="w-px bg-gray-300 dark:bg-gray-600 my-1"></div> <div class="relative dropdown-container">
-            <button onclick="toggleDropdown('catDropdown')" class="px-4 py-1.5 bg-white/80 dark:bg-gray-800/80 rounded-full font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 hover:bg-gray-50 transition-colors">
-                <i class="fa-solid fa-filter text-accent"></i> <span id="activeCatLabel">All Categories</span> <i class="fa-solid fa-chevron-down text-xs ml-1 text-gray-400"></i>
-            </button>
-            <div id="catDropdown" class="hidden absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-darksurface/95 backdrop-blur-xl rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col">
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-accent bg-gray-50 dark:bg-gray-800" data-filter="all" data-name="All Categories">🌍 All Categories</button>
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="nature" data-name="Nature">🌲 Nature</button>
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="architecture" data-name="Architecture">🏰 Architecture</button>
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="animals" data-name="Animals">🐾 Animals</button>
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="people" data-name="People">❤️ People</button>
-                <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="fun" data-name="Fun">🍻 Fun</button>
+        <div id="filterContainer" class="hidden flex-wrap justify-center gap-2 bg-white/90 dark:bg-darksurface/90 backdrop-blur-xl p-2 rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 transition-all">
+            
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown('catDropdown')" class="px-3 md:px-4 py-1.5 bg-white dark:bg-gray-800 rounded-xl font-semibold text-xs md:text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <i class="fa-solid fa-filter text-accent"></i> <span id="activeCatLabel">All Categories</span>
+                </button>
+                <div id="catDropdown" class="hidden absolute top-full left-0 mt-2 w-48 bg-white/95 dark:bg-darksurface/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col z-[9999]">
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-accent bg-gray-50 dark:bg-gray-800" data-filter="all" data-name="All Categories">🌍 All Categories</button>
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="nature" data-name="Nature">🌲 Nature</button>
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="architecture" data-name="Architecture">🏰 Architecture</button>
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="animals" data-name="Animals">🐾 Animals</button>
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="people" data-name="People">❤️ People</button>
+                    <button class="cat-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-filter="fun" data-name="Fun">🍻 Fun</button>
+                </div>
             </div>
-        </div>
 
-        {% if available_years %}
-        <div class="relative dropdown-container">
-            <button onclick="toggleDropdown('yearDropdown')" class="px-4 py-1.5 bg-white/80 dark:bg-gray-800/80 rounded-full font-semibold text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 hover:bg-gray-50 transition-colors">
-                <i class="fa-regular fa-calendar text-brand dark:text-blue-400"></i> <span id="activeYearLabel">All Time</span> <i class="fa-solid fa-chevron-down text-xs ml-1 text-gray-400"></i>
-            </button>
-            <div id="yearDropdown" class="hidden absolute top-full right-0 mt-2 w-36 bg-white/95 dark:bg-darksurface/95 backdrop-blur-xl rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col max-h-64 overflow-y-auto">
-                <button class="year-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-brand dark:border-blue-400 bg-gray-50 dark:bg-gray-800" data-year="all">All Time</button>
-                {% for year in available_years %}
-                    <button class="year-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-year="{{ year }}">{{ year }}</button>
-                {% endfor %}
+            {% if available_years %}
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown('yearDropdown')" class="px-3 md:px-4 py-1.5 bg-white dark:bg-gray-800 rounded-xl font-semibold text-xs md:text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <i class="fa-regular fa-calendar text-brand dark:text-blue-400"></i> <span id="activeYearLabel">All Time</span>
+                </button>
+                <div id="yearDropdown" class="hidden absolute top-full left-1/2 -translate-x-1/2 mt-2 w-36 bg-white/95 dark:bg-darksurface/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col max-h-64 overflow-y-auto z-[9999]">
+                    <button class="year-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-brand dark:border-blue-400 bg-gray-50 dark:bg-gray-800" data-year="all">All Time</button>
+                    {% for year in available_years %}
+                        <button class="year-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800" data-year="{{ year }}">{{ year }}</button>
+                    {% endfor %}
+                </div>
             </div>
+            {% endif %}
+
+            {% if albums %}
+            <div class="relative dropdown-container">
+                <button onclick="toggleDropdown('albumDropdown')" class="px-3 md:px-4 py-1.5 bg-white dark:bg-gray-800 rounded-xl font-semibold text-xs md:text-sm text-gray-800 dark:text-gray-200 flex items-center gap-2 shadow-sm border border-gray-100 dark:border-gray-700">
+                    <i class="fa-solid fa-book-open text-purple-500"></i> <span id="activeAlbumLabel">All Albums</span>
+                </button>
+                <div id="albumDropdown" class="hidden absolute top-full right-0 mt-2 w-56 bg-white/95 dark:bg-darksurface/95 backdrop-blur-xl rounded-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden flex flex-col max-h-64 overflow-y-auto z-[9999]">
+                    <button class="album-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-purple-500 bg-gray-50 dark:bg-gray-800" data-album="all" data-name="All Albums">All Albums</button>
+                    {% for album in albums %}
+                        <button class="album-filter-btn px-4 py-3 text-left text-sm font-semibold border-l-4 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 truncate" data-album="{{ album.id }}" data-name="{{ album.title }}">{{ album.title }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
-    <button id="btnLocate" class="absolute bottom-6 left-4 z-[1000] bg-white dark:bg-darksurface w-12 h-12 rounded-full shadow-lg text-brand dark:text-white hover:text-accent flex items-center justify-center text-xl transition-transform hover:scale-110 border border-gray-200 dark:border-gray-700" title="Find my location">
+    <button id="btnLocate" class="absolute bottom-24 md:bottom-8 left-4 z-[1000] bg-white dark:bg-darksurface w-12 h-12 rounded-full shadow-xl text-brand dark:text-white hover:text-accent flex items-center justify-center text-xl transition-transform hover:scale-110 border border-gray-200 dark:border-gray-700" title="Find my location">
         <i class="fa-solid fa-crosshairs"></i>
     </button>
 
     <div id="mapView" class="w-full h-full"></div>
 
-    <div id="galleryView" class="hidden w-full h-full overflow-y-auto p-4 pt-24 pb-8">
-        <div class="max-w-7xl mx-auto">
-            <div id="masonryContainer" class="masonry-grid">
-                </div>
+    <div id="galleryView" class="hidden w-full h-full overflow-y-auto p-2 md:p-4 pt-36 md:pt-32 pb-8">
+        <div class="max-w-screen-2xl mx-auto">
+            <div id="masonryContainer" class="masonry-grid"></div>
         </div>
     </div>
 
     <div id="emptyState" class="hidden absolute inset-0 z-[500] flex flex-col items-center justify-center pointer-events-none">
         <i class="fa-regular fa-image text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
         <h3 class="text-2xl font-bold text-gray-500 dark:text-gray-400">Oops, nothing here!</h3>
-        <p class="text-gray-400 dark:text-gray-500 mt-2">Try changing the filters or upload a new photo.</p>
+        <p class="text-gray-400 dark:text-gray-500 mt-2">Try changing the filters.</p>
     </div>
 </div>
 
-<div id="photoModal" class="fixed inset-0 z-[2000] hidden bg-black/80 backdrop-blur-xl items-center justify-center transition-opacity">
-    <button onclick="closeModal()" class="absolute top-6 right-8 text-white/70 hover:text-white text-4xl transition-colors z-50">&times;</button>
-    <button onclick="prevPhoto(event)" class="absolute left-2 md:left-8 text-white/50 hover:text-white text-4xl p-4 transition-colors z-50 hidden md:block">&#10094;</button>
+<div id="photoModal" class="fixed inset-0 z-[2000] hidden bg-black/90 backdrop-blur-xl items-center justify-center transition-opacity">
+    <button onclick="closeModal()" class="absolute top-6 right-6 md:right-8 text-white/70 hover:text-white text-4xl transition-colors z-[2100]">&times;</button>
+    <button onclick="prevPhoto(event)" class="absolute left-2 md:left-8 text-white/50 hover:text-white text-4xl p-4 transition-colors z-[2100] hidden md:block">&#10094;</button>
     
-    <div class="flex flex-col items-center p-4 max-w-5xl w-full h-full justify-center relative" id="swipeArea">
+    <div class="flex flex-col items-center p-2 md:p-4 max-w-5xl w-full h-full justify-center relative" id="swipeArea">
         <div id="imageSkeleton" class="absolute inset-0 m-auto w-3/4 md:w-1/2 h-1/2 bg-gray-800 animate-pulse rounded-xl hidden"></div>
-        
         <img id="modalImg" class="max-h-[75vh] max-w-full rounded-xl shadow-2xl object-contain opacity-0 transition-opacity duration-300 z-10" onload="imageLoaded()">
         
-        <div id="modalCaption" class="mt-4 text-center text-white p-4 max-w-2xl bg-black/40 rounded-xl backdrop-blur-md z-10 w-full md:w-auto mx-4"></div>
+        <div id="modalCaption" class="mt-4 text-center text-white p-4 max-w-2xl bg-black/60 rounded-xl backdrop-blur-md z-10 w-[95%] md:w-auto mx-auto shadow-xl"></div>
         <div class="md:hidden text-white/40 text-xs mt-2 flex items-center gap-2"><i class="fa-solid fa-arrows-left-right"></i> Swipe to navigate</div>
     </div>
     
-    <button onclick="nextPhoto(event)" class="absolute right-2 md:right-8 text-white/50 hover:text-white text-4xl p-4 transition-colors z-50 hidden md:block">&#10095;</button>
+    <button onclick="nextPhoto(event)" class="absolute right-2 md:right-8 text-white/50 hover:text-white text-4xl p-4 transition-colors z-[2100] hidden md:block">&#10095;</button>
 </div>
 
 <script id="photos-data" type="application/json">{{ photos_json|safe }}</script>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 
 <script>
     const photosData = JSON.parse(document.getElementById('photos-data').textContent);
     
-    // --- MAPA A TEMATICKÉ PODKLADY (Den/Noc) ---
     const map = L.map('mapView', { zoomControl: false }).setView([56.8, -4.2026], 6);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    // Světlá a Tmavá mapa (CartoDB)
     const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '&copy; CartoDB' });
     const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '&copy; CartoDB' });
 
+    // OPRAVA Tmavého režimu (Spolehlivé ověření paměti prohlížeče)
     function updateMapTheme() {
-        if (document.documentElement.classList.contains('dark')) {
-            map.removeLayer(lightTiles);
+        const isDark = localStorage.getItem('theme') === 'dark' || document.documentElement.classList.contains('dark');
+        if (isDark) {
+            if (map.hasLayer(lightTiles)) map.removeLayer(lightTiles);
             darkTiles.addTo(map);
         } else {
-            map.removeLayer(darkTiles);
+            if (map.hasLayer(darkTiles)) map.removeLayer(darkTiles);
             lightTiles.addTo(map);
         }
     }
-    updateMapTheme(); // Inicializace podkladu
-    window.addEventListener('themeChanged', updateMapTheme); // Změna podkladu při kliku na měsíc v hlavičce
+    
+    // Spustíme hned a pro jistotu i za 50ms, kdyby prohlížeč načítal pomaleji
+    updateMapTheme();
+    setTimeout(updateMapTheme, 50);
+    window.addEventListener('themeChanged', updateMapTheme);
 
     const markers = L.markerClusterGroup({ spiderfyOnMaxZoom: true, showCoverageOnHover: false });
     map.addLayer(markers);
@@ -146,7 +158,7 @@
     let currentPhotoIndex = 0;
     let activeCategory = 'all';
     let activeYear = 'all';
-    let currentView = 'map'; // 'map' or 'gallery'
+    let activeAlbum = 'all';
 
     const catConfig = {
         'nature': { color: '#27ae60', icon: 'fa-tree' }, 'architecture': { color: '#8e44ad', icon: 'fa-chess-rook' },
@@ -154,7 +166,6 @@
         'fun': { color: '#f39c12', icon: 'fa-beer-mug-empty' }, 'default': { color: '#2c3e50', icon: 'fa-camera' }
     };
 
-    // --- HLAVNÍ VYKRESLOVACÍ FUNKCE (Pro Mapu i Galerii) ---
     function renderContent() {
         markers.clearLayers();
         const masonryContainer = document.getElementById('masonryContainer');
@@ -162,21 +173,18 @@
         currentFilteredPhotos = [];
         
         photosData.forEach(photo => {
-            if ((activeCategory === 'all' || photo.category === activeCategory) && (activeYear === 'all' || photo.year == activeYear)) {
+            if ((activeCategory === 'all' || photo.category === activeCategory) && 
+                (activeYear === 'all' || photo.year == activeYear) &&
+                (activeAlbum === 'all' || photo.album_id == activeAlbum)) {
                 currentFilteredPhotos.push(photo);
             }
         });
 
-        // Správa Empty State (Prázdný stav)
         const emptyState = document.getElementById('emptyState');
-        if (currentFilteredPhotos.length === 0) {
-            emptyState.classList.remove('hidden');
-        } else {
-            emptyState.classList.add('hidden');
-        }
+        if (currentFilteredPhotos.length === 0) emptyState.classList.remove('hidden');
+        else emptyState.classList.add('hidden');
 
         currentFilteredPhotos.forEach((photo, index) => {
-            // Vykreslení Pinu do mapy
             const conf = catConfig[photo.category] || catConfig['default'];
             const customIcon = L.divIcon({
                 className: 'custom-pin',
@@ -190,59 +198,75 @@
             marker.bindPopup(popupContent);
             markers.addLayer(marker);
 
-            // Vykreslení Karty do Masonry Galerie
             const card = document.createElement('div');
             card.className = 'masonry-item relative group rounded-xl overflow-hidden shadow-md cursor-pointer bg-white dark:bg-darksurface';
             card.onclick = () => openModal(index);
             card.innerHTML = `
                 <img src="${photo.thumb_url}" class="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-500">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                    <h4 class="text-white font-bold">${photo.title}</h4>
-                    ${photo.date_formatted ? `<p class="text-white/80 text-xs"><i class="fa-regular fa-calendar mr-1"></i>${photo.date_formatted}</p>` : ''}
+                ${photo.album_title ? `<span class="bg-purple-600/90 text-white font-bold text-[9px] md:text-[10px] px-2 py-1 rounded-full absolute top-2 right-2 backdrop-blur-md shadow-lg z-10"><i class="fa-solid fa-book-open mr-1"></i>${photo.album_title}</span>` : ''}
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4">
+                    <h4 class="text-white font-bold text-sm md:text-base">${photo.title}</h4>
+                    ${photo.date_formatted ? `<p class="text-white/80 text-[10px] md:text-xs"><i class="fa-regular fa-calendar mr-1"></i>${photo.date_formatted}</p>` : ''}
                 </div>
             `;
             masonryContainer.appendChild(card);
         });
     }
 
-    // --- PŘEPÍNAČ VIEW (Mapa / Galerie) ---
+    // Logika zobrazení Map/Gallery
     document.getElementById('btnMap').addEventListener('click', () => {
         document.getElementById('mapView').classList.remove('hidden');
         document.getElementById('galleryView').classList.add('hidden');
-        document.getElementById('btnLocate').classList.remove('hidden'); // Ukáže geolokaci
-        document.getElementById('btnMap').className = "px-4 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all";
-        document.getElementById('btnGallery').className = "px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all";
-        map.invalidateSize(); // Nutné pro překreslení Leaflet mapy
+        document.getElementById('btnLocate').classList.remove('hidden');
+        document.getElementById('btnMap').className = "px-5 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all";
+        document.getElementById('btnGallery').className = "px-5 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all";
+        map.invalidateSize();
     });
 
     document.getElementById('btnGallery').addEventListener('click', () => {
         document.getElementById('mapView').classList.add('hidden');
         document.getElementById('galleryView').classList.remove('hidden');
-        document.getElementById('btnLocate').classList.add('hidden'); // Skryje geolokaci
-        document.getElementById('btnGallery').className = "px-4 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all";
-        document.getElementById('btnMap').className = "px-4 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all";
+        document.getElementById('btnLocate').classList.add('hidden');
+        document.getElementById('btnGallery').className = "px-5 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-gray-600 shadow text-brand dark:text-white transition-all";
+        document.getElementById('btnMap').className = "px-5 py-1.5 rounded-full text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-brand dark:hover:text-white transition-all";
     });
 
-    // --- GEOLOKACE (Kde jsem) ---
-    document.getElementById('btnLocate').addEventListener('click', () => {
-        map.locate({setView: true, maxZoom: 12});
+    // Toggle hlavních filtrů
+    document.getElementById('btnToggleFilters').addEventListener('click', () => {
+        const container = document.getElementById('filterContainer');
+        const chevron = document.getElementById('filterChevron');
+        
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+            chevron.classList.add('rotate-180');
+        } else {
+            container.classList.add('hidden');
+            container.classList.remove('flex');
+            chevron.classList.remove('rotate-180');
+        }
     });
-    map.on('locationfound', function(e) {
-        L.circleMarker(e.latlng, { radius: 8, fillColor: "#3b82f6", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(map).bindPopup("You are here").openPopup();
-    });
+
+    document.getElementById('btnLocate').addEventListener('click', () => { map.locate({setView: true, maxZoom: 12}); });
+    map.on('locationfound', function(e) { L.circleMarker(e.latlng, { radius: 8, fillColor: "#3b82f6", color: "#fff", weight: 3, opacity: 1, fillOpacity: 0.9 }).addTo(map).bindPopup("You are here").openPopup(); });
     map.on('locationerror', function(e) { alert("Could not access your location."); });
 
-    // --- LOGIKA DROPDOWN MENU ---
     function toggleDropdown(id) {
         const dropdown = document.getElementById(id);
-        if (id === 'catDropdown' && document.getElementById('yearDropdown')) document.getElementById('yearDropdown').classList.add('hidden');
-        else if (id === 'yearDropdown') document.getElementById('catDropdown').classList.add('hidden');
+        const allDropdowns = ['catDropdown', 'yearDropdown', 'albumDropdown'];
+        allDropdowns.forEach(dd => {
+            if (dd !== id && document.getElementById(dd)) {
+                document.getElementById(dd).classList.add('hidden');
+            }
+        });
         dropdown.classList.toggle('hidden');
     }
+
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.dropdown-container')) {
             document.getElementById('catDropdown')?.classList.add('hidden');
             document.getElementById('yearDropdown')?.classList.add('hidden');
+            document.getElementById('albumDropdown')?.classList.add('hidden');
         }
     });
 
@@ -268,7 +292,17 @@
         });
     });
 
-    // --- MODAL, SKELETON & SWIPE LOGIKA ---
+    document.querySelectorAll('.album-filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.album-filter-btn').forEach(b => { b.classList.remove('border-purple-500', 'bg-gray-50', 'dark:bg-gray-800'); b.classList.add('border-transparent'); });
+            this.classList.remove('border-transparent'); this.classList.add('border-purple-500', 'bg-gray-50', 'dark:bg-gray-800');
+            document.getElementById('activeAlbumLabel').textContent = this.dataset.name;
+            document.getElementById('albumDropdown').classList.add('hidden');
+            activeAlbum = this.dataset.album;
+            renderContent();
+        });
+    });
+
     const modal = document.getElementById("photoModal");
     const modalImg = document.getElementById("modalImg");
     const modalCaption = document.getElementById("modalCaption");
@@ -276,9 +310,8 @@
 
     function updateModalContent() {
         const photo = currentFilteredPhotos[currentPhotoIndex];
-        modalImg.style.opacity = '0'; // Skryjeme starý obrázek
-        skeleton.classList.remove('hidden'); // Ukážeme skeleton loader
-        
+        modalImg.style.opacity = '0';
+        skeleton.classList.remove('hidden');
         modalImg.src = photo.full_url;
         let captionHtml = `<h3 class="text-xl font-bold">${photo.title}</h3>`;
         if (photo.desc) captionHtml += `<p class="mt-2 text-gray-200 text-sm">${photo.desc}</p>`;
@@ -286,8 +319,8 @@
     }
 
     function imageLoaded() {
-        skeleton.classList.add('hidden'); // Obrázek se stáhl, schováme loader
-        modalImg.style.opacity = '1'; // Plynule zobrazíme obrázek
+        skeleton.classList.add('hidden');
+        modalImg.style.opacity = '1';
     }
 
     function openModal(index) {
@@ -295,16 +328,12 @@
         updateModalContent();
         modal.classList.remove("hidden");
         modal.classList.add("flex");
-        // Krátký timeout pro plynulou animaci pozadí
         setTimeout(() => modal.classList.add("opacity-100"), 10);
     }
 
     function closeModal() {
         modal.classList.remove("opacity-100");
-        setTimeout(() => {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }, 300); // Počkáme na dokončení animace
+        setTimeout(() => { modal.classList.add("hidden"); modal.classList.remove("flex"); }, 300);
     }
 
     function nextPhoto(e) { if(e) e.stopPropagation(); currentPhotoIndex = (currentPhotoIndex + 1) % currentFilteredPhotos.length; updateModalContent(); }
@@ -318,24 +347,16 @@
         }
     });
 
-    // Swipe logika pro mobilní telefony
-    let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartX = 0; let touchEndX = 0;
     const swipeArea = document.getElementById('swipeArea');
-
     swipeArea.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
-    swipeArea.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-
+    swipeArea.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); });
     function handleSwipe() {
-        const threshold = 50; // Minimální délka tahu pro uznání swipu
-        if (touchEndX < touchStartX - threshold) nextPhoto(); // Tah doleva -> Další
-        if (touchEndX > touchStartX + threshold) prevPhoto(); // Tah doprava -> Předchozí
+        const threshold = 50;
+        if (touchEndX < touchStartX - threshold) nextPhoto();
+        if (touchEndX > touchStartX + threshold) prevPhoto();
     }
 
-    // Start!
     renderContent();
 </script>
 {% endblock %}

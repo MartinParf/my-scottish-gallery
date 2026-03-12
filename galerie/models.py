@@ -17,6 +17,15 @@ CATEGORY_CHOICES = [
     ('fun', '🍻 Fun'),
 ]
 
+class Album(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    start_date = models.DateField(blank=True, null=True, help_text="Kdy výlet začal")
+    end_date = models.DateField(blank=True, null=True, help_text="Kdy výlet skončil")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
 
 class Photo(models.Model):
     title = models.CharField(max_length=100)
@@ -29,6 +38,7 @@ class Photo(models.Model):
     is_public = models.BooleanField(default=False, verbose_name="Public Photo")
     tagged_people = models.ManyToManyField(User, blank=True, related_name="photos_of_me")
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='nature', verbose_name="Category")
+    album = models.ForeignKey(Album, on_delete=models.SET_NULL, null=True, blank=True, related_name='photos', verbose_name="Album")
 
     tags = models.CharField(max_length=255, blank=True, help_text="AI or manual tags separated by comma")
     

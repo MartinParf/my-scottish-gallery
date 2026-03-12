@@ -1,0 +1,124 @@
+{% extends 'galerie/base.html' %}
+
+{% block title %}Bulk Upload | Scottish Gallery{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto my-8 p-4 w-full">
+    
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-serif font-bold text-brand dark:text-white flex items-center gap-3">
+                <i class="fa-solid fa-images text-accent"></i> Bulk Upload
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Upload multiple photos at once. EXIF data (GPS & Time) will be extracted automatically.</p>
+        </div>
+        <a href="{% url 'galerie:manage_photos' %}" class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-brand dark:hover:text-white transition-colors">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="bg-white dark:bg-darksurface p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-800">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+            
+            <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"><i class="fa-solid fa-book-open mr-1 text-accent"></i> Assign to Album</label>
+                
+                {% if albums %}
+                <select name="album_id" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-accent mb-3">
+                    <option value="">-- No Album (Standalone) --</option>
+                    {% for album in albums %}
+                        <option value="{{ album.id }}">{{ album.title }}</option>
+                    {% endfor %}
+                </select>
+                <div class="text-center text-gray-400 dark:text-gray-500 text-sm font-bold mb-3">- OR -</div>
+                {% endif %}
+                
+                <input type="text" name="new_album_name" placeholder="Create new album (e.g. Isle of Skye 2024)" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-accent">
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"><i class="fa-solid fa-eye mr-1 text-blue-500"></i> Visibility</label>
+                <label class="flex items-center gap-3 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 cursor-pointer hover:border-accent transition-colors">
+                    <input type="checkbox" name="is_public" class="w-5 h-5 text-accent rounded border-gray-300 focus:ring-accent">
+                    <div>
+                        <span class="block font-bold text-gray-800 dark:text-gray-200">Make Public</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Anyone can see these photos on the main map.</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Select Photos</label>
+            <div id="dropzone" class="w-full p-10 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl bg-gray-50 dark:bg-gray-800/30 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
+                
+                <input type="file" name="photos" id="fileInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                
+                <i class="fa-solid fa-cloud-arrow-up text-5xl text-accent mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Drag & Drop photos here</h3>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">or click to browse your computer</p>
+                
+                <div id="fileCount" class="hidden mt-6 inline-flex items-center gap-2 bg-brand text-white px-4 py-2 rounded-full font-bold text-sm shadow-md">
+                    <i class="fa-solid fa-images"></i> <span id="countText">0 files selected</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="submitBtn" type="submit" class="w-full bg-accent hover:bg-brand text-white font-bold text-lg py-4 px-4 rounded-xl transition-colors shadow-lg flex justify-center items-center">
+            <i class="fa-solid fa-upload mr-2"></i> Upload & Process Photos
+        </button>
+        
+        <div id="loadingState" class="hidden w-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold text-lg py-4 px-4 rounded-xl flex justify-center items-center">
+            <i class="fa-solid fa-circle-notch fa-spin mr-3 text-accent"></i> Processing images... please wait.
+        </div>
+    </form>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const fileCount = document.getElementById('fileCount');
+    const countText = document.getElementById('countText');
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingState = document.getElementById('loadingState');
+
+    // Animace při přetažení souboru nad dropzone
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-accent', 'bg-green-50', 'dark:bg-green-900/20');
+        dropzone.classList.remove('border-gray-300', 'dark:border-gray-600');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-accent', 'bg-green-50', 'dark:bg-green-900/20');
+        dropzone.classList.add('border-gray-300', 'dark:border-gray-600');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        dropzone.classList.remove('border-accent', 'bg-green-50', 'dark:bg-green-900/20');
+        dropzone.classList.add('border-gray-300', 'dark:border-gray-600');
+    });
+
+    // Aktualizace počítadla souborů
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            fileCount.classList.remove('hidden');
+            countText.textContent = `${this.files.length} photo${this.files.length > 1 ? 's' : ''} selected`;
+        } else {
+            fileCount.classList.add('hidden');
+        }
+    });
+
+    // Změna tlačítka na Loading při odeslání
+    form.addEventListener('submit', function() {
+        if (fileInput.files.length > 0) {
+            submitBtn.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            loadingState.classList.add('flex');
+        }
+    });
+</script>
+{% endblock %}
