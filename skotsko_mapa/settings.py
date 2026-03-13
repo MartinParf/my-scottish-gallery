@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+import sentry_sdk
 
 load_dotenv()  # Load variables from .env file (if present)
 
@@ -30,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'development-fallback-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']  # For Fly.io and testing we temporarily allow all hosts
+ALLOWED_HOSTS = ['my-scottish-gallery.fly.dev', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://my-scottish-gallery.fly.dev',
@@ -195,3 +196,18 @@ if not DEBUG:
     
     # 5. Zapne ochranu prohlížeče proti podvrženým skriptům
     SECURE_BROWSER_XSS_FILTER = True
+
+    # ==========================================
+# SENTRY - MONITORING CHYB A VÝKONU
+# ==========================================
+SENTRY_DSN = os.environ.get('SENTRY_DSN')
+
+if SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        # Traces_sample_rate měří rychlost načítání stránek (Performance). 
+        # 1.0 znamená 100 % (v produkci pro velký provoz se dává např. 0.2)
+        traces_sample_rate=1.0,
+        # Rozlišení prostředí, abychom v Sentry věděli, odkud chyba přišla
+        environment='production' if not DEBUG else 'development',
+    )

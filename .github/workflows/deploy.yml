@@ -1,0 +1,54 @@
+name: CI/CD Pipeline for Scottish Gallery
+
+# Kdy se má spustit?
+on:
+  push:
+    branches:
+      - main  # Spustí se jen při pushnutí do větve main
+
+jobs:
+  # FÁZE 1: TESTOVÁNÍ A KONTROLA
+  test_and_lint:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Zkopírování kódu z GitHubu
+        uses: actions/checkout@v4
+        
+      - name: Příprava Pythonu 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Instalace závislostí
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Kontrola kódu pomocí Ruff
+        run: ruff check . --output-format=github
+        
+      - name: Spuštění Unit Testů
+        # Nastavíme falešný klíč, aby Django nenadávalo při testech
+        env:
+          SECRET_KEY: 'test-secret-key-123'
+        run: python manage.py test
+
+  # FÁZE 2: NASAZENÍ (Spustí se jen když FÁZE 1 projde)
+  deploy:
+    name: Deploy to Fly.io
+    needs: test_and_lint # Toto říká GitHubu: "Počkej na testy!"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Zkopírování kódu
+        uses: actions/checkout@v4
+        
+      - name: Příprava nástroje Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        
+      - name: Automatický deploy na Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
