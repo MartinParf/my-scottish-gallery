@@ -1,11 +1,14 @@
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-# Říkáme robotovi: Pro testy vypni Whitenoise a použij normální Django úložiště
-@override_settings(STORAGES={
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
-})
+# Říkáme robotovi: Vypni Whitenoise a vypni i přesměrování na HTTPS!
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+    },
+    SECURE_SSL_REDIRECT=False  # <--- TOTO JE TA ZÁCHRANA
+)
 class GallerySmokeTests(TestCase):
     def test_homepage_loads_successfully(self):
         """Test, zda hlavní mapa běží a nevrací Error 500"""
