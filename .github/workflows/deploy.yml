@@ -6,6 +6,10 @@ on:
     branches:
       - main  # Spustí se jen při pushnutí do větve main
 
+# NOVÉ: Vynutíme nejnovější Node.js pro všechny nástroje
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   # FÁZE 1: TESTOVÁNÍ A KONTROLA
   test_and_lint:

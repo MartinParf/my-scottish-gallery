@@ -1,4 +1,4 @@
-from PIL import Image, ExifTags
+from PIL import ExifTags
 
 def get_decimal_coordinates(img):
     """
